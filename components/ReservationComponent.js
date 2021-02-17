@@ -1,19 +1,17 @@
 import React, { Component } from "react";
 import {
-    Text,
-    View,
-    ScrollView,
-    StyleSheet,
-    Picker,
-    Switch,
-    Button,
-    Alert,
+    Text, View, ScrollView, StyleSheet,
+    Picker, Switch, Button, Alert,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Animatable from "react-native-animatable";
+import * as Notifications from 'expo-notifications';
+
 class Reservation extends Component {
+
     constructor(props) {
         super(props);
+
         this.state = {
             campers: 1,
             hikeIn: false,
@@ -21,9 +19,11 @@ class Reservation extends Component {
             showCalendar: false,
         };
     }
+
     static navigationOptions = {
         title: "Reserve Campsite",
     };
+
     handleReservation() {
         this.setState({
             campers: 1,
@@ -31,6 +31,7 @@ class Reservation extends Component {
             showCalendar: false,
         });
     }
+
     resetForm() {
         this.setState({
             campers: 1,
@@ -39,6 +40,33 @@ class Reservation extends Component {
             showCalendar: false,
         });
     }
+
+    async presentLocalNotification(date) {
+        function sendNotification() {
+            Notifications.setNotificationHandler({
+                handleNotification: async () => ({
+                    shouldShowAlert: true
+                })
+            });
+
+            Notifications.scheduleNotificationAsync({
+                content: {
+                    title: 'Your Campsite Reservation Search',
+                    body: `Search for ${date} requested`
+                },
+                trigger: null
+            });
+        }
+
+        let permissions = await Notifications.getPermissionsAsync();
+        if (!permissions.granted) {
+            permissions = await Notifications.requestPermissionsAsync();
+        }
+        if (permissions.granted) {
+            sendNotification();
+        }
+    }
+
     render() {
         return (
             <ScrollView>
@@ -114,9 +142,10 @@ class Reservation extends Component {
                                             style: "cancel",
                                         },
                                         {
-                                            text: "Search",
+                                            text: "OK",
                                             onPress: () => {
-                                                console.log("not searched"), this.resetForm();
+                                                this.presentLocalNotification(this.state.date.toLocaleDateString('en-US'));
+                                                this.resetForm();
                                             },
                                             style: "search",
                                         },
